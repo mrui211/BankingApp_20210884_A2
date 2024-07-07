@@ -5,7 +5,6 @@ namespace BankingApp_20210884
 {
     public partial class Form1 : Form
     {
-      
         public Form1()
         {
             InitializeComponent();
@@ -24,8 +23,8 @@ namespace BankingApp_20210884
 
         private void btnManageAccounts_Click(object sender, EventArgs e)
         {
-            ManageAccouts ma = new ManageAccouts();
-            ma.Show();
+            SelectCurstomerForm sc = new SelectCurstomerForm();
+            sc.Show();
         }
     }
 }
