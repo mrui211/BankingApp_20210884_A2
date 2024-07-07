@@ -1,11 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace BankingApp_20210884
@@ -14,6 +7,7 @@ namespace BankingApp_20210884
     {
         private Controller control;
         Customer c;
+        string filenameCustomerData = "customer.dat";
 
         public ManageCustomers()
         {
@@ -32,8 +26,10 @@ namespace BankingApp_20210884
 
         private void btnAddCustomer_Click(object sender, EventArgs e)
         {
-            control.AddCustomer(txtCustomerName.Text, txtCustomerContactDetails.Text, chkBoxCustomerBankStaff.Checked);
-
+            if(!control.CustomerExists(txtCustomerName.Text, txtCustomerContactDetails.Text, chkBoxCustomerBankStaff.Checked))
+                control.AddCustomer(txtCustomerName.Text, txtCustomerContactDetails.Text, chkBoxCustomerBankStaff.Checked);
+            else
+                MessageBox.Show("Customer Exist please validate information.");
             //MessageBox.Show("Customer added successfully.");
             refreshListBoxClientes();
             cleanInfo();
@@ -78,11 +74,15 @@ namespace BankingApp_20210884
         {
             lsBoxCustomers.Items.Clear();
 
-            //foreach (var cliente in control.ListCustomers)
-            foreach (var cliente in LstCustomers.Clientes)
-            {
-                lsBoxCustomers.Items.Add(cliente);
+            LstCustomers.Clientes = PersistenceData.DeserializeFromXmlFile<Customer>(filenameCustomerData);
+            if (LstCustomers.Clientes != null) {
+                //foreach (var cliente in control.ListCustomers)
+                foreach (var cliente in LstCustomers.Clientes)
+                {
+                    lsBoxCustomers.Items.Add(cliente);
+                }
             }
+            
         }
 
         private void lsBoxCustomers_SelectedIndexChanged(object sender, EventArgs e)
@@ -100,7 +100,9 @@ namespace BankingApp_20210884
             chkBoxCustomerBankStaff.Checked = c.BankStaff;
 
             lsBoxCustomerAccounts.Items.Clear();
-            if (c.ListAccounts.Count.Equals(0))
+            if (c.ListAccounts == null)
+                lsBoxCustomerAccounts.Items.Add("Customer does not have any account");
+            else if (c.ListAccounts != null && c.ListAccounts.Count.Equals(0))
                 lsBoxCustomerAccounts.Items.Add("Customer does not have any account");
             else
                 refreshListBoxAccounts();
@@ -135,6 +137,15 @@ namespace BankingApp_20210884
         private void refreshListBoxAccounts()
         {
             lsBoxCustomerAccounts.Items.Clear();
+
+            foreach (Customer customerInfo in LstCustomers.Clientes)
+            {
+                if (customerInfo.UniqueID == c.UniqueID)
+                {
+                    c.ListAccounts = customerInfo.ListAccounts;
+                    c.ListTransactions = customerInfo.ListTransactions;
+                }
+            }
 
             foreach (var account in c.ListAccounts)
             {

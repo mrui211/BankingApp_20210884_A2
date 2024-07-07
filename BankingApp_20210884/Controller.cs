@@ -8,14 +8,36 @@ namespace BankingApp_20210884
 {
     class Controller
     {
+        string filenameCustomerData = "customer.dat";
         public Controller()
         {
         }
 
-        public void AddCustomer(string name, string contactDetails, bool bankStaff)
+        public bool CustomerExists(string name, string contactDetails, bool bankStaff) {
+            if (LstCustomers.Clientes == null)
+                return false;
+            if(LstCustomers.Clientes.Where(x => x.Name == name && x.ContactDetails == contactDetails && x.BankStaff == bankStaff).Count() > 0 )
+                return true;
+            else return false;
+        }
 
+        public void AddCustomer(string name, string contactDetails, bool bankStaff)
         {
-            LstCustomers.Clientes.Add(new Customer(name, contactDetails, bankStaff));
+            LstCustomers.Clientes = PersistenceData.DeserializeFromXmlFile<Customer>(filenameCustomerData);
+            int nexID = 1;
+            if (LstCustomers.Clientes != null)
+            {
+                Customer LastClient = LstCustomers.Clientes.Last();
+                nexID = LastClient.UniqueID + 1;
+            }
+            else {
+                LstCustomers.Clientes = new List<Customer>();
+            }           
+
+            LstCustomers.Clientes.Add(new Customer(nexID, name, contactDetails, bankStaff));
+            Customer c = LstCustomers.Clientes.First( x => x.Name == name && x.ContactDetails == contactDetails && x.BankStaff == bankStaff);
+            PersistenceData.SerializeToXmlFile(LstCustomers.Clientes, filenameCustomerData);
+            LstCustomers.Clientes = PersistenceData.DeserializeFromXmlFile<Customer>(filenameCustomerData);
         }
 
         public void EditCustomer(int customerID, string name, string contactDetails, bool bankStaff)
@@ -27,6 +49,8 @@ namespace BankingApp_20210884
                 customer.ContactDetails = contactDetails;
                 customer.BankStaff = bankStaff;
             }
+            PersistenceData.SerializeToXmlFile(LstCustomers.Clientes, filenameCustomerData);
+            LstCustomers.Clientes = PersistenceData.DeserializeFromXmlFile<Customer>(filenameCustomerData);
         }
 
         public void DeleteCustomer(int customerID)
@@ -36,6 +60,8 @@ namespace BankingApp_20210884
             {
                 LstCustomers.Clientes.Remove(customer);
             }
+            PersistenceData.SerializeToXmlFile(LstCustomers.Clientes, filenameCustomerData);
+            LstCustomers.Clientes = PersistenceData.DeserializeFromXmlFile<Customer>(filenameCustomerData);
         }
 
         public void AddCustomerAccount(int customerID, string accountType, double deposit)
@@ -43,6 +69,10 @@ namespace BankingApp_20210884
             var customer = LstCustomers.Clientes.Find(c => c.UniqueID == customerID);
             if (customer != null)
             {
+                if (customer.ListAccounts == null)
+                {
+                    customer.ListAccounts = new List<Account>();
+                }
                 if (accountType == Account.accountTypes.EverydayAccount.ToString())
                 {
                     customer.ListAccounts.Add(new EverydayAccount(deposit));
@@ -55,8 +85,13 @@ namespace BankingApp_20210884
                 {
                     customer.ListAccounts.Add(new OmniAccount(deposit));
                 }
+
+                PersistenceData.SerializeToXmlFile(LstCustomers.Clientes, filenameCustomerData);
+                LstCustomers.Clientes = PersistenceData.DeserializeFromXmlFile<Customer>(filenameCustomerData);
             }
         }
+
+
     }
 }
 
